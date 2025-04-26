@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { LLMResponse } from '../types';
+import { LLMResponse, FetchedQuestion } from '../types';
 
 // API configuration
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
@@ -86,6 +86,43 @@ export const apiService = {
       throw error;
     }
   },
+// Publish trending unanswered questions
+async publishTrendingQuestions() {
+  try {
+    const response = await apiClient.get('/questions/fetch/trending');
+    return response.data;
+  } catch (error) {
+    console.error('Error publishing trending questions:', error);
+    throw error;
+  }
+},
+
+// Publish topic-wise questions
+async publishTopicQuestions(tag: string) {
+  try {
+    const response = await apiClient.get(`/questions/fetch/topic/${tag}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error publishing questions for tag "${tag}":`, error);
+    throw error;
+  }
+},
+// For fetching trending questions by tag
+async getTrendingQuestions() {
+  // const url = tag ? `/questions/trending/all?tag=${tag}` : '/questions/trending/all';
+  const url = '/questions/trending/all';
+  try {
+    const response = await apiClient.get(url);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching trending questions:', error);
+    return [];
+  }
+}
+
+
+
+
 };
 
 export default apiService; 

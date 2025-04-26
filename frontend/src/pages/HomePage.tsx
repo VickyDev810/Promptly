@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
@@ -24,12 +24,15 @@ import {
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/api';
-import { LLMResponse } from '../types';
+import { LLMResponse, Question, FetchedQuestion } from '../types';
+
 
 const HomePage: React.FC = () => {
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<LLMResponse | null>(null);
+  const [trendingQuestions, setTrendingQuestions] = useState<FetchedQuestion[]>([]);
+  const [trendingLoading, setTrendingLoading] = useState(true);
   const theme = useTheme();
   const navigate = useNavigate();
 
@@ -37,6 +40,22 @@ const HomePage: React.FC = () => {
     'JavaScript', 'React', 'Python', 'Machine Learning', 
     'TypeScript', 'Node.js', 'CSS', 'SQL', 'Docker'
   ];
+  
+  useEffect(() => {
+    const loadTrendingQuestions = async () => {
+      try {
+        apiService.publishTrendingQuestions()
+        const fetchedQuestions = await apiService.getTrendingQuestions();
+        setTrendingQuestions(fetchedQuestions);
+      } catch (error) {
+        console.error('Error fetching trending questions:', error);
+      } finally {
+        setTrendingLoading(false);
+      }
+    };
+
+    loadTrendingQuestions();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,7 +291,7 @@ const HomePage: React.FC = () => {
                   />
                   {response.tags.map(tag => (
                     <Chip 
-                      key={tag} 
+            key={tag} 
                       label={tag} 
                       size="small" 
                       color="secondary" 
@@ -420,7 +439,7 @@ const HomePage: React.FC = () => {
                   <Typography 
                     variant="h5" 
                     component="h3" 
-                    gutterBottom
+       gutterBottom
                     sx={{ fontFamily: '"Orbitron", sans-serif' }}
                   >
                     Trending Questions
@@ -442,40 +461,49 @@ const HomePage: React.FC = () => {
                 </Box>
                 <Box sx={{ width: { xs: '100%', md: 'calc(41.67% - 16px)' }}}>
                   <Box sx={{ p: 1 }}>
-                    {['Why is my React useEffect hook firing twice?', 
-                      'Best practices for Docker security in production', 
-                      'TypeScript: How to properly type React props with generic components'].map((q, i) => (
-                      <Box 
-                        key={i}
-                        sx={{ 
-                          p: 2, 
-                          mb: 2, 
-                          backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                          borderRadius: 1,
-                          border: '1px solid rgba(255, 255, 255, 0.05)',
-                          '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                            cursor: 'pointer'
-                          }
-                        }}
-                      >
-                        <Typography variant="body2">{q}</Typography>
-                        <Box sx={{ display: 'flex', mt: 1, gap: 1 }}>
-                          {['react', 'hooks', 'javascript', 'docker', 'typescript'][i % 3 === 0 ? 0 : i % 3 === 1 ? 3 : 4].split(',').map(tag => (
-                            <Chip 
-                              key={tag} 
-                              label={tag} 
-                              size="small" 
-                              sx={{ 
-                                height: 20, 
-                                fontSize: '0.7rem',
-                                backgroundColor: 'rgba(3, 233, 244, 0.1)',
-                              }} 
-                            />
-                          ))}
-                        </Box>
+                    {trendingLoading ? (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                        <CircularProgress size={24} />
                       </Box>
-                    ))}
+                    ) : trendingQuestions.length > 0 ? (
+                      trendingQuestions.slice(0, 3).map((fq, i) => (
+                        <Box 
+                          key={fq.id || i}
+                          sx={{ 
+                            p: 2, 
+                            mb: 2, 
+                            backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                            borderRadius: 1,
+                            border: '1px solid rgba(255, 255, 255, 0.05)',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                              cursor: 'pointer'
+                            }
+                          }}
+                          onClick={() => navigate(`/questions/${fq.id}`)}
+                        >
+                          <Typography variant="body2">{fq.title}</Typography>
+                          <Box sx={{ display: 'flex', mt: 1, gap: 1 }}>
+                            {fq.tags && fq.tags.map(tag => (
+                              <Chip 
+                                key={tag} 
+                                label={tag} 
+                                size="small" 
+                                sx={{ 
+                                  height: 20, 
+                                  fontSize: '0.7rem',
+                                  backgroundColor: 'rgba(3, 233, 244, 0.1)',
+                                }} 
+                              />
+                            ))}
+                          </Box>
+                        </Box>
+                      ))
+                    ) : (
+                      <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
+                        No trending questions available
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
               </Box>

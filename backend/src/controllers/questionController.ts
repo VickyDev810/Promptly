@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { processQuestion } from '../services/geminiService';
 import { GeminiResponse, Question, QuestionRequest, TypedRequest } from '../types';
+import { produceTrendingQuestions, produceTopicwiseQuestions } from "../services/questionService";
+import { FetchedQuestion } from '../models/FetchedQuestion';
 
 // In-memory storage for questions (would be replaced by a database in production)
 const questions: Question[] = [];
@@ -89,3 +91,75 @@ export const getQuestionById = (req: Request, res: Response) => {
   
   return res.status(200).json(question);
 }; 
+
+/**
+ * Get Trending question 
+ */
+export async function publishTrendingQuestions(req: Request, res: Response) {
+  try {
+    await produceTrendingQuestions();
+    res.json({ message: "Trending unanswered questions published" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to publish questions" });
+  }
+};
+
+/**
+ * Get a question by Topic
+ */
+export async function publishTopicQuestions(req: Request, res: Response) {
+  try {
+    const { tag } = req.params;
+    await produceTopicwiseQuestions(tag);
+    res.json({ message: `Questions for tag ${tag} published` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to publish topicwise questions" });
+  }
+};
+
+
+/**
+ * Get all trending questions (optionally by tag)
+ */
+export async function getTrendingQuestions(req: Request, res: Response) {
+  try {
+    // Check if there is a 'tag' query parameter
+    const { tag } = req.query;
+
+    // If 'tag' is provided in the query, filter by it
+    let query = {};
+    if (tag) {
+      query = { tags: tag };
+    }
+
+    // Fetch questions based on the query and sort them by creation date
+    const questions = await FetchedQuestion.find(query).sort({ creation_date: -1 }).limit(50);
+    res.json(questions);
+  } catch (error) {
+    console.error('❌ Error fetching questions:', error);
+    res.status(500).json({ error: 'Failed to fetch questions' });
+  }
+}
+
+/**
+ * Get a trending question by ID
+ */
+export async function getTrendingQuestionById(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    // Fetch a question by its unique question_id
+    const question = await FetchedQuestion.findOne({ question_id: id });
+
+    if (!question) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    res.json(question);
+  } catch (error) {
+    console.error('❌ Error fetching question by ID:', error);
+    res.status(500).json({ error: 'Failed to fetch question' });
+  }
+}

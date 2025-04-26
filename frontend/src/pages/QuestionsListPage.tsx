@@ -30,10 +30,28 @@ import { Question, User } from '../types';
 
 const QuestionsListPage: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [trendingQuestions, setTrendingQuestions] = useState<Question[]>([]);
   const [tabValue, setTabValue] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<Record<string, User>>({});
 
+  // Helper function to map API data to our Question type
+  const mapApiToQuestions = (apiQuestions: any[]): Question[] => {
+    return apiQuestions.map(q => ({
+      id: q.id,
+      question: q.title || q.question || 'Unknown question',
+      timestamp: q.created_at || q.timestamp || new Date().toISOString(),
+      status: q.answered ? 'answered' : 'escalated',
+      response: q.response || {
+        confidence: q.confidence || 0.8,
+        answer: q.answer || '',
+        escalate_to_human: !q.answered,
+        tags: q.tags || []
+      }
+    }));
+  };
+
+  // Fetch regular questions
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
@@ -59,6 +77,32 @@ const QuestionsListPage: React.FC = () => {
     };
     
     fetchQuestions();
+  }, []);
+
+  // Fetch trending questions separately
+  useEffect(() => {
+    const loadTrendingQuestions = async () => {
+      try {
+        // Try to fetch trending questions from API
+        const fetchedTrending = await apiService.publishTrendingQuestions?.();
+        
+        if (fetchedTrending && fetchedTrending.length > 0) {
+          // Map API data to our Question type
+          const mappedQuestions = mapApiToQuestions(fetchedTrending);
+          setTrendingQuestions(mappedQuestions);
+        } else {
+          // If API doesn't exist or returns empty, use mock data
+          console.log('Using mock data for trending questions');
+          setTrendingQuestions(mockQuestions.slice(0, 3));
+        }
+      } catch (error) {
+        console.error('Error fetching trending questions:', error);
+        // Fallback to mock data
+        setTrendingQuestions(mockQuestions.slice(0, 3));
+      }
+    };
+
+    loadTrendingQuestions();
   }, []);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -139,18 +183,24 @@ const QuestionsListPage: React.FC = () => {
     (q.response?.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
   );
   
-  const sortedQuestions = [...filteredQuestions].sort((a, b) => {
-    switch (tabValue) {
-      case 0: // Trending
-        return a.id.localeCompare(b.id); // In a real app, sort by a trending metric
-      case 1: // Newest
-        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-      case 2: // Unanswered/Escalated
-        return a.status === 'escalated' ? -1 : 1;
-      default:
-        return 0;
-    }
-  });
+  // Use trending questions for tab 0, otherwise use filtered and sorted questions
+  const sortedQuestions = tabValue === 0 && trendingQuestions.length > 0
+    ? trendingQuestions.filter(q => 
+        q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (q.response?.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
+      )
+    : [...filteredQuestions].sort((a, b) => {
+        switch (tabValue) {
+          case 0: // Trending (fallback if no trending questions)
+            return a.id.localeCompare(b.id);
+          case 1: // Newest
+            return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+          case 2: // Unanswered/Escalated
+            return a.status === 'escalated' ? -1 : 1;
+          default:
+            return 0;
+        }
+      });
 
   const containerVariants = {
     hidden: { opacity: 0 },

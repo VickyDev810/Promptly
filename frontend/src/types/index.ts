@@ -36,3 +36,12 @@ export interface Comment {
   comment: string;
   timestamp: string;
 } 
+
+export interface FetchedQuestion {
+  id: string;             // From question_id
+  title: string;          // Question title
+  link: string;           // Link to original post
+  score: number;          // Upvotes / Score
+  tags: string[];         // Tags like [javascript, css]
+  creation_date: number;  // Unix timestamp (seconds)
+}

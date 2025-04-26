@@ -4,6 +4,18 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import * as dotenv from 'dotenv';
 import questionRoutes from './routes/questionRoutes';
+import { connectDB } from './utils/db';
+import { consumeTrendingQuestions, consumeTopicwiseQuestions } from './services/consumer';
+
+// Function to start consuming Fluvio topics
+async function startConsumption() {
+  try {
+    console.log('Starting initial consumption of questions...');
+    await consumeTrendingQuestions();
+  } catch (error) {
+    console.error('Error starting initial consumption:', error);
+  }
+}
 
 // Load environment variables
 dotenv.config();
@@ -25,9 +37,17 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
 
+async function startServer() {
+  await connectDB();
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+}
+
+// Start server
+startServer();
+
+
+startConsumption();
 export default app; 
