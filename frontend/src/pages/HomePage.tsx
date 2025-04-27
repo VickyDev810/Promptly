@@ -13,6 +13,9 @@ import {
   Divider,
   Stack
 } from '@mui/material';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { 
   Search as SearchIcon,
   LightbulbOutlined as LightbulbIcon,
@@ -26,6 +29,49 @@ import { useNavigate } from 'react-router-dom';
 import apiService from '../services/api';
 import { LLMResponse, FetchedQuestion } from '../types';
 
+
+// Custom renderers for markdown components
+const renderers = {
+  code({ node, inline, className, children, ...props }: any) {
+    const match = /language-(\w+)/.exec(className || '');
+    return !inline && match ? (
+      <SyntaxHighlighter
+        style={atomDark}
+        language={match[1]}
+        PreTag="div"
+        {...props}
+      >
+        {String(children).replace(/\n$/, '')}
+      </SyntaxHighlighter>
+    ) : (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    );
+  },
+  // Add custom styling for other markdown elements
+  p: (props: any) => <Typography variant="body1" sx={{ mb: 2 }} {...props} />,
+  h1: (props: any) => <Typography variant="h4" sx={{ mt: 3, mb: 2 }} {...props} />,
+  h2: (props: any) => <Typography variant="h5" sx={{ mt: 3, mb: 2 }} {...props} />,
+  h3: (props: any) => <Typography variant="h6" sx={{ mt: 2, mb: 1 }} {...props} />,
+  ul: (props: any) => <Box component="ul" sx={{ pl: 2, mb: 2 }} {...props} />,
+  ol: (props: any) => <Box component="ol" sx={{ pl: 2, mb: 2 }} {...props} />,
+  li: (props: any) => <Box component="li" sx={{ mb: 1 }} {...props} />,
+  blockquote: (props: any) => (
+    <Box
+      component="blockquote"
+      sx={{
+        pl: 2,
+        py: 1,
+        borderLeft: '4px solid',
+        borderColor: 'primary.main',
+        bgcolor: 'rgba(3, 233, 244, 0.05)',
+        my: 2,
+      }}
+      {...props}
+    />
+  ),
+};
 
 const HomePage: React.FC = () => {
   const [question, setQuestion] = useState('');
@@ -346,7 +392,7 @@ const HomePage: React.FC = () => {
                         mb: 2, 
                         backgroundColor: 'rgba(255, 255, 255, 0.03)',
                         borderRadius: 1,
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
                         '&:hover': {
                           backgroundColor: 'rgba(255, 255, 255, 0.05)',
                           cursor: 'pointer'
@@ -406,35 +452,82 @@ const HomePage: React.FC = () => {
                 borderRadius: 2,
                 background: 'linear-gradient(145deg, rgba(20, 30, 48, 0.95), rgba(17, 23, 43, 0.98))',
                 backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(66, 153, 225, 0.08)',
+                border: '1px solid rgba(66, 153, 225, 0.08)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+                '& pre': {
+                  borderRadius: 1,
+                  padding: '1rem',
+                  overflow: 'auto',
+                  backgroundColor: 'rgba(0, 0, 0, 0.2) !important',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  fontSize: '0.9rem',
+                  maxHeight: '400px',
+                },
+                '& code': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                  padding: '2px 4px',
+                  borderRadius: 1,
+                  fontSize: '0.9rem',
+                  color: theme.palette.primary.light,
+                },
+                '& a': {
+                  color: theme.palette.primary.main,
+                  textDecoration: 'none',
+                  '&:hover': {
+                    textDecoration: 'underline',
+                  },
+                },
+                '& table': {
+                  borderCollapse: 'collapse',
+                  width: '100%',
+                  marginBottom: 2,
+                },
+                '& th, & td': {
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '8px 12px',
+                  textAlign: 'left',
+                },
+                '& th': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                },
               }}
             >
-              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6" sx={{ fontFamily: '"Orbitron", sans-serif' }}>AI Response</Typography>
-                <Box>
+              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+                <Typography variant="h6" sx={{ fontFamily: '"Orbitron", sans-serif', mb: { xs: 1, md: 0 } }}>AI Response</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                   <Chip 
                     label={`Confidence: ${Math.round(response.confidence * 100)}%`} 
                     size="small" 
                     color={response.confidence > 0.7 ? "success" : "warning"}
-                    sx={{ mr: 1 }}
+                    sx={{ 
+                      borderColor: response.confidence > 0.7 ? "success.main" : "warning.main",
+                      '& .MuiChip-label': { fontWeight: 'bold' }
+                    }}
                   />
-                  {response.tags.slice(0, 4).map(tag => (
+                  {response.tags.slice(0, 3).map(tag => (
                     <Chip 
                       key={tag} 
                       label={tag} 
                       size="small" 
                       color="secondary" 
                       variant="outlined" 
-                      sx={{ mr: 1 }}
+                      sx={{ 
+                        backgroundColor: 'rgba(3, 233, 244, 0.05)',
+                        borderColor: 'rgba(3, 233, 244, 0.3)',
+                        '&:hover': { backgroundColor: 'rgba(3, 233, 244, 0.1)' }
+                      }}
                     />
                   ))}
-                  {response.tags.length > 4 && (
+                  {response.tags.length > 3 && (
                     <Chip 
-                      label={`+${response.tags.length - 4} more`} 
+                      label={`+${response.tags.length - 3} more`} 
                       size="small" 
                       color="secondary" 
                       variant="outlined" 
-                      sx={{ mr: 1 }}
+                      sx={{ 
+                        backgroundColor: 'rgba(3, 233, 244, 0.05)',
+                        borderColor: 'rgba(3, 233, 244, 0.3)'
+                      }}
                     />
                   )}
                 </Box>
@@ -442,9 +535,11 @@ const HomePage: React.FC = () => {
               
               <Divider sx={{ mb: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
               
-              <Typography variant="body1" sx={{ mb: 3 }}>
-                {response.answer}
-              </Typography>
+              <Box sx={{ fontFamily: '"Roboto", sans-serif' }}>
+                <ReactMarkdown components={renderers}>
+                  {response.answer}
+                </ReactMarkdown>
+              </Box>
               
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <Button
