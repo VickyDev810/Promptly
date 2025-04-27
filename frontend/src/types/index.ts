@@ -38,10 +38,21 @@ export interface Comment {
 } 
 
 export interface FetchedQuestion {
-  id: string;             // From question_id
+  question_id: number;             // From question_id
   title: string;          // Question title
   link: string;           // Link to original post
   score: number;          // Upvotes / Score
   tags: string[];         // Tags like [javascript, css]
   creation_date: number;  // Unix timestamp (seconds)
+  display_name: string;
+}
+
+export interface FetchedQuestionWithBody {
+  id: number;
+  question: string;
+  timestamp: string;
+  status: 'answered' | 'pending' | 'escalated';
+  body_markdown: string;
+  response?: LLMResponse;
+  tags: string[];         // Tags like [javascript, css]
 }

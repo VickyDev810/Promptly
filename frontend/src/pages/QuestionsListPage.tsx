@@ -38,7 +38,7 @@ const QuestionsListPage: React.FC = () => {
   // Helper function to map API data to our Question type
   const mapApiToQuestions = (apiQuestions: any[]): Question[] => {
     return apiQuestions.map(q => ({
-      id: q.id,
+      id: q.question_id,
       question: q.title || q.question || 'Unknown question',
       timestamp: q.created_at || q.timestamp || new Date().toISOString(),
       status: q.answered ? 'answered' : 'escalated',

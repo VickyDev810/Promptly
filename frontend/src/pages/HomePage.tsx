@@ -24,7 +24,7 @@ import {
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/api';
-import { LLMResponse, Question, FetchedQuestion } from '../types';
+import { LLMResponse, FetchedQuestion } from '../types';
 
 
 const HomePage: React.FC = () => {
@@ -195,7 +195,7 @@ const HomePage: React.FC = () => {
                 fontWeight: 'light'
               }}
             >
-              Get instant answers to your technical questions with our AI-powered assistant.
+              Get instant answers to your questions with our AI-powered assistant.
               Complex questions are escalated to our community of experts.
             </Typography>
           </motion.div>
@@ -340,7 +340,7 @@ const HomePage: React.FC = () => {
                 <Box>
                   {topicQuestions.map((q) => (
                     <Box 
-                      key={q.id}
+                      key={q.question_id}
                       sx={{ 
                         p: 2, 
                         mb: 2, 
@@ -352,7 +352,7 @@ const HomePage: React.FC = () => {
                           cursor: 'pointer'
                         }
                       }}
-                      onClick={() => navigate(`/questions/${q.id}`)}
+                      onClick={() => navigate(`/questions/${q.question_id}`)}
                     >
                       <Typography variant="body1">{q.title}</Typography>
                       <Box sx={{ display: 'flex', mt: 1, gap: 1 }}>
@@ -597,6 +597,7 @@ const HomePage: React.FC = () => {
                     Browse Questions
                   </Button>
                 </Box>
+
                 <Box sx={{ width: { xs: '100%', md: 'calc(51.67% - 16px)' }}}>
                   <Box sx={{ p: 1 }}>
                     {trendingLoading ? (
@@ -606,7 +607,7 @@ const HomePage: React.FC = () => {
                     ) : trendingQuestions.length > 0 ? (
                       trendingQuestions.slice(0, 3).map((fq, i) => (
                         <Box 
-                          key={fq.id || i}
+                          key={fq.question_id}
                           sx={{ 
                             p: 2, 
                             mb: 2, 
@@ -618,7 +619,7 @@ const HomePage: React.FC = () => {
                               cursor: 'pointer'
                             }
                           }}
-                          onClick={() => navigate(`/questions/${fq.id}`)}
+                          onClick={() => {navigate(`/questions/${fq.question_id}`); console.log(fq.question_id)}}
                         >
                           <Typography variant="body2">{fq.title}</Typography>
                           <Box sx={{ display: 'flex', mt: 1, gap: 1 }}>

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { LLMResponse, FetchedQuestion } from '../types';
+import { LLMResponse } from '../types';
 
 // API configuration
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
