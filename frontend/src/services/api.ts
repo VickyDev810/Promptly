@@ -2,13 +2,21 @@ import axios from 'axios';
 import { LLMResponse } from '../types';
 
 // API configuration
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://b524-103-47-74-66.ngrok-free.app/api';
+
+
+// axios.get(API_URL, {
+//   headers: {
+//     'ngrok-skip-browser-warning': 'true',
+//   }
+// });
 
 // Create axios instance
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',  // 👈 Add this here globally
   },
 });
 
