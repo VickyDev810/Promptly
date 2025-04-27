@@ -124,6 +124,7 @@ MODEL_NAME=mistral    # or llama2, gemma, etc.
 
 ## 📸 Screenshots
 
+![Home Page Screenshot](screenshots/main1.jpg)
 
 ---
 
