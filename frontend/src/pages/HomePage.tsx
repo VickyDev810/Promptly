@@ -179,7 +179,7 @@ const HomePage: React.FC = () => {
                 letterSpacing: { xs: 0, md: 2 },
               }}
             >
-              TechNexus AI
+              Promptly
             </Typography>
           </motion.div>
 
@@ -489,7 +489,7 @@ const HomePage: React.FC = () => {
               textAlign: 'center'
             }}
           >
-            Why Use TechNexus?
+            Why Use Promptly?
           </Typography>
           
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 6 }}>

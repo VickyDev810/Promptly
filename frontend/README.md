@@ -1,8 +1,8 @@
-# TechNexus - Smart StackOverflow with AI
+# Promptly - Smart StackOverflow with AI
 
-TechNexus is a modern, AI-powered technical Q&A platform that combines the intelligence of large language models with community expertise. This application provides instant answers to technical questions when possible, and escalates complex questions to human experts when needed.
+Promptly is a modern, AI-powered technical Q&A platform that combines the intelligence of large language models with community expertise. This application provides instant answers to technical questions when possible, and escalates complex questions to human experts when needed.
 
-![TechNexus Screenshot](screenshot.png)
+![Promptly Screenshot](screenshot.png)
 
 ## Features
 
@@ -15,7 +15,7 @@ TechNexus is a modern, AI-powered technical Q&A platform that combines the intel
 
 ## Smart Escalation
 
-One of the key features of TechNexus is its ability to determine when a question is best answered by AI or by human experts:
+One of the key features of Promptly is its ability to determine when a question is best answered by AI or by human experts:
 
 1. **High Confidence (>75%)**: The AI provides an immediate answer
 2. **Low Confidence (<50%)**: The question is automatically flagged for community attention
@@ -41,8 +41,8 @@ One of the key features of TechNexus is its ability to determine when a question
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/technexus.git
-cd technexus
+git clone https://github.com/yourusername/Promptly.git
+cd Promptly
 ```
 
 2. Install frontend dependencies:

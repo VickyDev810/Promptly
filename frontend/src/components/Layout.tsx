@@ -93,12 +93,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 component="span" 
                 sx={{ 
                   color: 'primary.main',
-                  textShadow: '0 0 5px #03e9f4, 0 0 10px #03e9f4'
+                  textShadow: '0 0 5px #123456, 0 0 10px #03e9f9'
                 }}
               >
-                Tech
+                Prompt
               </Box>
-              Nexus
+              ly
             </motion.div>
           </Typography>
 
@@ -268,7 +268,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <Container maxWidth="lg">
           <Typography variant="body2" color="text.secondary" align="center">
-            TechNexus © {new Date().getFullYear()} - Smart StackOverflow with AI
+            Promptly © {new Date().getFullYear()} - Smart StackOverflow with AI
           </Typography>
         </Container>
       </Box>
