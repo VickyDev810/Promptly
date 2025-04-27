@@ -625,7 +625,7 @@ const HomePage: React.FC = () => {
                 >
                   <Card 
                     sx={{ 
-                      height: '100%',
+                      height: 250, // Fixed height
                       background: 'linear-gradient(145deg, rgba(17, 24, 39, 0.6), rgba(12, 18, 32, 0.8))',
                       backdropFilter: 'blur(10px)',
                       border: '1px solid rgba(255, 255, 255, 0.05)',
