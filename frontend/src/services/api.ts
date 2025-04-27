@@ -107,9 +107,8 @@ async publishTopicQuestions(tag: string) {
     throw error;
   }
 },
-// For fetching trending questions by tag
+// For fetching all trending questions 
 async getTrendingQuestions() {
-  // const url = tag ? `/questions/trending/all?tag=${tag}` : '/questions/trending/all';
   const url = '/questions/trending/all';
   try {
     const response = await apiClient.get(url);
@@ -118,9 +117,40 @@ async getTrendingQuestions() {
     console.error('Error fetching trending questions:', error);
     return [];
   }
+},
+
+// For fetching trending questions by tag
+async getTrendingQuestionsByTag(tag : string) {
+  const url = `/questions/trending/all?tag=${tag}`;
+  try {
+    const response = await apiClient.get(url);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching trending questions:', error);
+    return [];
+  }
+},
+
+async getTrendingTags() {
+  const url = '/questions/featured/tags';
+  try {
+    const response = await apiClient.get(url);
+    return response.data;
+  } catch (error) {
+    console.error ('Error fetching trending tags:', error);
+    return [];
+  }
+},
+
+async getQuestionDetail(id: string) {
+  try {
+    const response = await apiClient.get(`/questions/body/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching question details:', error);
+    return null;
+  }
 }
-
-
 
 
 };

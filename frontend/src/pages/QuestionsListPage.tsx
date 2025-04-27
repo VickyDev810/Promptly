@@ -83,22 +83,18 @@ const QuestionsListPage: React.FC = () => {
   useEffect(() => {
     const loadTrendingQuestions = async () => {
       try {
-        // Try to fetch trending questions from API
-        const fetchedTrending = await apiService.publishTrendingQuestions?.();
+        const fetchedTrending = await apiService.getTrendingQuestions();
         
         if (fetchedTrending && fetchedTrending.length > 0) {
-          // Map API data to our Question type
           const mappedQuestions = mapApiToQuestions(fetchedTrending);
           setTrendingQuestions(mappedQuestions);
         } else {
-          // If API doesn't exist or returns empty, use mock data
-          console.log('Using mock data for trending questions');
+          console.log('No trending questions fetched, using mock data');
           setTrendingQuestions(mockQuestions.slice(0, 3));
         }
       } catch (error) {
         console.error('Error fetching trending questions:', error);
-        // Fallback to mock data
-        setTrendingQuestions(mockQuestions.slice(0, 3));
+        setTrendingQuestions(mockQuestions.slice(0, 3)); // Fallback to mock data
       }
     };
 

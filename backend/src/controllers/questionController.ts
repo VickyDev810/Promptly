@@ -2,8 +2,11 @@ import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { processQuestion } from '../services/geminiService';
 import { GeminiResponse, Question, QuestionRequest, TypedRequest } from '../types';
-import { produceTrendingQuestions, produceTopicwiseQuestions } from "../services/questionService";
+import { produceTrendingQuestions, produceTopicwiseQuestions } from "../services/trendingQuestions";
 import { FetchedQuestion } from '../models/FetchedQuestion';
+import { FetchedTag } from '../models/FetchedTags';
+import { produceTrendingTags } from '../services/trendingTags';
+import { fetchQuestionDetail } from '../services/questionService';
 
 // In-memory storage for questions (would be replaced by a database in production)
 const questions: Question[] = [];
@@ -161,5 +164,54 @@ export async function getTrendingQuestionById(req: Request, res: Response) {
   } catch (error) {
     console.error('❌ Error fetching question by ID:', error);
     res.status(500).json({ error: 'Failed to fetch question' });
+  }
+}
+
+
+/**
+ * Get Trending Tags
+ */
+export async function publishTrendingTags(req: Request, res: Response) {
+  try {
+    await produceTrendingTags();
+    res.json({ message: "Trending tags  published" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to publish tags" });
+  }
+};
+
+/**
+ * Get Trending Tags
+ */
+
+export async function getTrendingTags(req: Request, res: Response) {
+  try {
+    const tags = await FetchedTag.find().sort({ name: 1 }).limit(50);
+    res.json(tags);
+  } catch (error) {
+    console.error('❌ Error fetching trending tags:', error);
+    res.status(500).json({ error: 'Failed to fetch trending tags' });
+  }
+}
+
+/**
+ * Get Question Details
+ */
+
+
+export async function getQuestionDetail(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const question = await fetchQuestionDetail(id);
+
+    if (!question) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    res.json(question);
+  } catch (error) {
+    console.error('❌ Error fetching question details:', error);
+    res.status(500).json({ error: 'Failed to fetch question details' });
   }
 }

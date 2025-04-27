@@ -8,6 +8,7 @@ export interface IFetchedQuestion extends Document {
   creation_date: number;
   is_answered: boolean;
   score: number;
+  body: string; // New field for the question body
 }
 
 const FetchedQuestionSchema = new Schema<IFetchedQuestion>({
@@ -18,6 +19,7 @@ const FetchedQuestionSchema = new Schema<IFetchedQuestion>({
   creation_date: { type: Number, required: true },
   is_answered: { type: Boolean, default: false },
   score: { type: Number, default: 0 },
+  body: { type: String, required: true }, // New field
 });
 
 export const FetchedQuestion = mongoose.model<IFetchedQuestion>('FetchedQuestion', FetchedQuestionSchema);

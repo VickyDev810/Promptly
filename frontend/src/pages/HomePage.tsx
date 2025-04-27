@@ -33,13 +33,13 @@ const HomePage: React.FC = () => {
   const [response, setResponse] = useState<LLMResponse | null>(null);
   const [trendingQuestions, setTrendingQuestions] = useState<FetchedQuestion[]>([]);
   const [trendingLoading, setTrendingLoading] = useState(true);
+  const [featuredTopics, setFeaturedTopics] = useState<string[]>([]);
+  const [tagsLoading, setTagsLoading] = useState(true);
+  const [topicQuestions, setTopicQuestions] = useState<FetchedQuestion[]>([]);
+  const [topicLoading, setTopicLoading] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const theme = useTheme();
   const navigate = useNavigate();
-
-  const featuredTopics = [
-    'JavaScript', 'React', 'Python', 'Machine Learning', 
-    'TypeScript', 'Node.js', 'CSS', 'SQL', 'Docker'
-  ];
   
   useEffect(() => {
     const loadTrendingQuestions = async () => {
@@ -54,7 +54,21 @@ const HomePage: React.FC = () => {
       }
     };
 
+  const loadTrendingTags = async () => {
+      try {
+        const tags = await apiService.getTrendingTags();
+        const tagNames = tags.map((tag: any) => tag.name);  // <-- take only 'name'
+        setFeaturedTopics(tagNames);
+      } catch (error) {
+        console.error('Error loading trending tags:', error);
+      } finally {
+        setTagsLoading(false);
+      }
+    };
+    
+
     loadTrendingQuestions();
+    loadTrendingTags();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,6 +94,20 @@ const HomePage: React.FC = () => {
   const handleNewQuestion = () => {
     setQuestion('');
     setResponse(null);
+  };
+
+  const handleTopicClick = async (topic: string) => {
+    try {
+      setTopicLoading(true);
+      setSelectedTopic(topic);
+      await apiService.publishTopicQuestions(topic);
+      const fetchedQuestions = await apiService.getTrendingQuestionsByTag(topic);
+      setTopicQuestions(fetchedQuestions);
+    } catch (error) {
+      console.error('Error handling topic click:', error);
+    } finally {
+      setTopicLoading(false);
+    }
   };
 
   const containerVariants = {
@@ -182,12 +210,12 @@ const HomePage: React.FC = () => {
                 mx: 'auto',
                 mb: 3,
                 zIndex: 1,
-              }}
+        }}
             >
               <TextField
                 fullWidth
                 variant="outlined"
-                placeholder="Ask a technical question..."
+                placeholder="Ask a question..."
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 disabled={loading}
@@ -241,29 +269,38 @@ const HomePage: React.FC = () => {
                 Popular topics:
               </Typography>
               <Box sx={{ display: 'inline-flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
-                {featuredTopics.map((topic) => (
-                  <Chip
-                    key={topic}
-                    label={topic}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                    clickable
-                    sx={{ 
-                      backdropFilter: 'blur(4px)',
-                      backgroundColor: 'rgba(3, 233, 244, 0.1)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(3, 233, 244, 0.2)',
-                      }
-                    }}
-                  />
-                ))}
+                {tagsLoading ? (
+                  <CircularProgress size={24} color="primary" />
+                ) : featuredTopics.length > 0 ? (
+                  featuredTopics.map((topic) => (
+                    <Chip
+                      key={topic}
+                      label={topic}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                      clickable
+                      onClick={() => handleTopicClick(topic)}
+                      sx={{ 
+                        backdropFilter: 'blur(4px)',
+                        backgroundColor: 'rgba(3, 233, 244, 0.1)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(3, 233, 244, 0.2)',
+                        }
+                      }}
+                    />
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No trending topics available
+                  </Typography>
+                )}
               </Box>
             </Box>
           </motion.div>
         </Box>
 
-        {response && (
+        {selectedTopic && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -281,6 +318,98 @@ const HomePage: React.FC = () => {
               }}
             >
               <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h6" sx={{ fontFamily: '"Orbitron", sans-serif' }}>
+                  Questions about {selectedTopic}
+                </Typography>
+                <Button 
+                  size="small" 
+                  color="primary" 
+                  onClick={() => setSelectedTopic(null)}
+                >
+                  Clear
+                </Button>
+              </Box>
+              
+              <Divider sx={{ mb: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+              
+              {topicLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : topicQuestions.length > 0 ? (
+                <Box>
+                  {topicQuestions.map((q) => (
+                    <Box 
+                      key={q.id}
+                      sx={{ 
+                        p: 2, 
+                        mb: 2, 
+                        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                        borderRadius: 1,
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                          cursor: 'pointer'
+                        }
+                      }}
+                      onClick={() => navigate(`/questions/${q.id}`)}
+                    >
+                      <Typography variant="body1">{q.title}</Typography>
+                      <Box sx={{ display: 'flex', mt: 1, gap: 1 }}>
+                        {q.tags && q.tags.slice(0, 3).map(tag => (
+                          <Chip 
+                            key={tag} 
+                            label={tag} 
+                            size="small" 
+                            sx={{ 
+                              height: 20, 
+                              fontSize: '0.7rem',
+                              backgroundColor: 'rgba(3, 233, 244, 0.1)',
+                            }} 
+                          />
+                        ))}
+                        {q.tags && q.tags.length > 3 && (
+                          <Chip 
+                            label={`+${q.tags.length - 3} more`} 
+                            size="small" 
+                            sx={{ 
+                              height: 20, 
+                              fontSize: '0.7rem',
+                              backgroundColor: 'rgba(3, 233, 244, 0.1)',
+                            }} 
+                          />
+                        )}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
+                  No questions found for this topic
+                </Typography>
+              )}
+            </Paper>
+          </motion.div>
+        )}
+
+        {response && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                mb: 4,
+                borderRadius: 2,
+                background: 'linear-gradient(145deg, rgba(20, 30, 48, 0.95), rgba(17, 23, 43, 0.98))',
+                backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(66, 153, 225, 0.08)',
+              }}
+            >
+              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6" sx={{ fontFamily: '"Orbitron", sans-serif' }}>AI Response</Typography>
                 <Box>
                   <Chip 
@@ -289,9 +418,9 @@ const HomePage: React.FC = () => {
                     color={response.confidence > 0.7 ? "success" : "warning"}
                     sx={{ mr: 1 }}
                   />
-                  {response.tags.map(tag => (
+                  {response.tags.slice(0, 4).map(tag => (
                     <Chip 
-            key={tag} 
+                      key={tag} 
                       label={tag} 
                       size="small" 
                       color="secondary" 
@@ -299,6 +428,15 @@ const HomePage: React.FC = () => {
                       sx={{ mr: 1 }}
                     />
                   ))}
+                  {response.tags.length > 4 && (
+                    <Chip 
+                      label={`+${response.tags.length - 4} more`} 
+                      size="small" 
+                      color="secondary" 
+                      variant="outlined" 
+                      sx={{ mr: 1 }}
+                    />
+                  )}
                 </Box>
               </Box>
               
@@ -435,7 +573,7 @@ const HomePage: React.FC = () => {
               }}
             >
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
-                <Box sx={{ width: { xs: '100%', md: 'calc(58.33% - 16px)' }}}>
+                <Box sx={{ width: { xs: '100%', md: 'calc(48.33% - 16px)' }}}>
                   <Typography 
                     variant="h5" 
                     component="h3" 
@@ -459,7 +597,7 @@ const HomePage: React.FC = () => {
                     Browse Questions
                   </Button>
                 </Box>
-                <Box sx={{ width: { xs: '100%', md: 'calc(41.67% - 16px)' }}}>
+                <Box sx={{ width: { xs: '100%', md: 'calc(51.67% - 16px)' }}}>
                   <Box sx={{ p: 1 }}>
                     {trendingLoading ? (
                       <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
@@ -484,7 +622,7 @@ const HomePage: React.FC = () => {
                         >
                           <Typography variant="body2">{fq.title}</Typography>
                           <Box sx={{ display: 'flex', mt: 1, gap: 1 }}>
-                            {fq.tags && fq.tags.map(tag => (
+                            {fq.tags && fq.tags.slice(0, 3).map(tag => (
                               <Chip 
                                 key={tag} 
                                 label={tag} 
@@ -496,6 +634,17 @@ const HomePage: React.FC = () => {
                                 }} 
                               />
                             ))}
+                            {fq.tags && fq.tags.length > 3 && (
+                              <Chip 
+                                label={`+${fq.tags.length - 3} more`} 
+                                size="small" 
+                                sx={{ 
+                                  height: 20, 
+                                  fontSize: '0.7rem',
+                                  backgroundColor: 'rgba(3, 233, 244, 0.1)',
+                                }} 
+                              />
+                            )}
                           </Box>
                         </Box>
                       ))

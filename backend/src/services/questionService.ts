@@ -2,6 +2,11 @@ import { getProducer } from "./connector";
 import axios from "axios";
 
 const STACKEXCHANGE_API = "https://api.stackexchange.com/2.3";
+const STACKEXCHANGE_API_KEY = process.env.STACKEXCHANGE_API_KEY || 'your-stack-key';
+
+
+// Trending Questions
+
 
 export async function fetchTrendingUnansweredQuestions() {
   const res = await axios.get(`${STACKEXCHANGE_API}/questions/unanswered`, {
@@ -9,6 +14,7 @@ export async function fetchTrendingUnansweredQuestions() {
       order: "desc",
       sort: "votes",
       site: "stackoverflow", // or your target site
+      key: STACKEXCHANGE_API_KEY,
     },
   });
 
@@ -16,35 +22,59 @@ export async function fetchTrendingUnansweredQuestions() {
   return questions;
 }
 
-export async function produceTrendingQuestions() {
-  const producer = await getProducer("trending-questions");
-  const questions = await fetchTrendingUnansweredQuestions();
 
-  for (const question of questions) {
-    await producer.sendRecord(JSON.stringify(question), 0);
-  }
-}
+// Trending Question By Tags
 
 export async function fetchQuestionsByTag(tag: string) {
-    const res = await axios.get(`${STACKEXCHANGE_API}/questions/unanswered/${tag}`, {
+    const res = await axios.get(`${STACKEXCHANGE_API}/questions/unanswered/`, {
       params: {
         order: "desc",
         sort: "activity",
         tagged: tag,
         site: "stackoverflow",
+        key: STACKEXCHANGE_API_KEY,
+
       },
     });
   
     const questions = res.data.items || [];
     return questions;
   }
+
+  // Question Details
   
-  export async function produceTopicwiseQuestions(tag: string) {
-    const producer = await getProducer("topicwise-questions");
-    const questions = await fetchQuestionsByTag(tag);
+  export async function fetchQuestionDetail(id: string) {
+    const res = await axios.get(`${STACKEXCHANGE_API}/questions/${id}`, {
+      params: {
+        order: "desc",
+        sort: "activity",
+        filter: "!6WPIomnurtKpr",
+        site: "stackoverflow",
+        key: STACKEXCHANGE_API_KEY,
+
+      },
+    });
   
-    for (const question of questions) {
-      await producer.sendRecord(JSON.stringify(question), 0);
-    }
+    const question = res.data.items[0] || null;
+    return question;
   }
-  
+
+
+
+// Tags
+
+export async function fetchTrendingTags() {
+  const res = await axios.get(`${STACKEXCHANGE_API}/tags`, {
+    params: {
+      order: "desc",
+      sort: "popular",
+      site: "stackoverflow",
+      key: STACKEXCHANGE_API_KEY,
+
+    },
+  });
+  const tags = res.data.items || [];
+  return tags;
+}
+
+

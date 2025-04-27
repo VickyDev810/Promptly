@@ -5,13 +5,16 @@ import helmet from 'helmet';
 import * as dotenv from 'dotenv';
 import questionRoutes from './routes/questionRoutes';
 import { connectDB } from './utils/db';
-import { consumeTrendingQuestions, consumeTopicwiseQuestions } from './services/consumer';
+import { consumeTrendingQuestions, consumeTopicwiseQuestions } from './services/trendingQuestions';
+import { consumeTrendingTags } from './services/trendingTags';
 
 // Function to start consuming Fluvio topics
 async function startConsumption() {
   try {
     console.log('Starting initial consumption of questions...');
     await consumeTrendingQuestions();
+    console.log('Starting initial consumption of tags.....');
+    await consumeTrendingTags();
   } catch (error) {
     console.error('Error starting initial consumption:', error);
   }
@@ -50,4 +53,7 @@ startServer();
 
 
 startConsumption();
+
+
+
 export default app; 

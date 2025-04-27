@@ -54,16 +54,16 @@ export const processQuestion = async (question: string): Promise<GeminiResponse>
     };
 
     // Create the prompt with instructions built in
-    const prompt = `You're an AI assistant for a technical Q&A platform. Answer the following question as an expert.
+    const prompt = `You're an AI assistant for a Q&A platform specializing in technical and general topics. Answer user questions clearly, accurately, and professionally.
 
-If the question is clear and you can provide a confident answer, do so thoroughly.
-If the question is ambiguous or requires specialized human expertise, provide a basic answer but indicate it should be escalated.
+- Provide a detailed answer if confident.
+- If unsure or if the question needs specialized human expertise, give a basic response and mark it for escalation.
 
-TECHNICAL QUESTION: ${question}
+QUESTION: ${question}
 
 ${FORMAT_INSTRUCTIONS}
 
-Remember, output ONLY the JSON object with no additional text.`;
+Only output the JSON object, no extra text.`;
 
     console.log('Sending request to Gemini API...');
     
