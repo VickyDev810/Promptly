@@ -24,4 +24,5 @@ yarn-error.log*
 
 .env
 node_modules
-package.*
+package.json
+package-lock.json
